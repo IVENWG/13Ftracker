@@ -9,8 +9,9 @@ permissions:
   contents: write
 
 jobs:
-  build-data:
+  fetch-and-build:
     runs-on: ubuntu-latest
+    timeout-minutes: 360
     steps:
       - name: Checkout 13Ftracker repository
         uses: actions/checkout@v4
@@ -19,18 +20,20 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+          cache: "pipenv"
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f Pipfile ]; then pip install pipenv && pipenv install --dev; fi
+          python -m pip install --upgrade pip pipenv
+          pipenv install --deploy
 
-      - name: Build institutional data
-        run: python scripts/build_institutional_data.py --source database --output data/institutional
+      - name: Fetch SEC data and build institutional artifacts
+        env:
+          GITHUB_ACTIONS: "true"
+        run: pipenv run python scripts/fetch_and_build.py
 
       - name: Commit data updates
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "data: update institutional toolbox artifacts"
-          file_pattern: data/institutional/**
+          commit_message: "data: update institutional filings and artifacts"
+          file_pattern: database/** data/institutional/**
