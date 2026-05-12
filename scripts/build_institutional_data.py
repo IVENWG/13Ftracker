@@ -4,7 +4,9 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import re
+import sys
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -45,6 +47,9 @@ FIELD_ALIASES = {
 }
 
 QUARTER_PATTERN = re.compile(r"^20\d{2}Q[1-4]$")
+ROOT = Path(__file__).resolve().parent.parent
+os.chdir(ROOT)
+sys.path.insert(0, str(ROOT))
 
 
 def parse_args() -> argparse.Namespace:
@@ -131,17 +136,26 @@ def discover_quarters(source: Path) -> list[str]:
     return quarters
 
 
-def load_analysis(source: Path, quarter: str) -> list[dict[str, Any]]:
+def load_raw_analysis(source: Path, quarter: str) -> list[dict[str, Any]]:
     analysis_path = source / quarter / "analysis.json"
-    if not analysis_path.exists():
-        raise FileNotFoundError(
-            f"Missing {analysis_path}. Generate quarter analysis in 13Ftracker before building static toolbox data."
-        )
-    with analysis_path.open("r", encoding="utf-8") as file:
-        data = json.load(file)
-    if not isinstance(data, list):
-        raise ValueError(f"Expected list in {analysis_path}")
-    return [normalize_row(row) for row in data if isinstance(row, dict)]
+    if analysis_path.exists():
+        with analysis_path.open("r", encoding="utf-8") as file:
+            data = json.load(file)
+        if not isinstance(data, list):
+            raise ValueError(f"Expected list in {analysis_path}")
+        return [row for row in data if isinstance(row, dict)]
+
+    from app.analysis.stocks import quarter_analysis
+
+    df = quarter_analysis(quarter)
+    records = df.to_dict(orient="records")
+    analysis_path.parent.mkdir(parents=True, exist_ok=True)
+    write_json(analysis_path, records)
+    return records
+
+
+def load_analysis(source: Path, quarter: str) -> list[dict[str, Any]]:
+    return [normalize_row(row) for row in load_raw_analysis(source, quarter)]
 
 
 def top_stocks(rows: list[dict[str, Any]], limit: int = 10) -> list[dict[str, Any]]:
@@ -248,8 +262,8 @@ def main() -> None:
     source = args.source
     output = args.output
     quarters = discover_quarters(source)
-    raw_analyses = {quarter: json.loads((source / quarter / "analysis.json").read_text(encoding="utf-8")) for quarter in quarters}
-    analyses = {quarter: load_analysis(source, quarter) for quarter in quarters}
+    raw_analyses = {quarter: load_raw_analysis(source, quarter) for quarter in quarters}
+    analyses = {quarter: [normalize_row(row) for row in raw_analyses[quarter]] for quarter in quarters}
     latest_quarter = quarters[-1]
 
     metadata = {
