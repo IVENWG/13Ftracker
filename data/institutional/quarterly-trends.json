@@ -1,0 +1,86 @@
+[
+  {
+    "quarter": "2025Q1",
+    "totalInstitutionalValue": 842000000000,
+    "totalDeltaValue": 31600000000,
+    "buyerCount": 1830,
+    "sellerCount": 1510,
+    "newHolderCount": 412,
+    "closedPositionCount": 286,
+    "highConvictionCount": 126,
+    "netBuyers": 320,
+    "topSectors": [
+      { "name": "Information Technology", "value": 263000000000, "deltaValue": 12400000000 },
+      { "name": "Health Care", "value": 148000000000, "deltaValue": 5200000000 },
+      { "name": "Financials", "value": 132000000000, "deltaValue": 3900000000 }
+    ],
+    "topStocks": [
+      { "ticker": "NVDA", "company": "NVIDIA Corp", "value": 38500000000, "deltaValue": 7100000000 },
+      { "ticker": "MSFT", "company": "Microsoft Corp", "value": 42200000000, "deltaValue": 4300000000 },
+      { "ticker": "LLY", "company": "Eli Lilly and Co", "value": 18600000000, "deltaValue": 2800000000 }
+    ]
+  },
+  {
+    "quarter": "2025Q2",
+    "totalInstitutionalValue": 879000000000,
+    "totalDeltaValue": 37200000000,
+    "buyerCount": 1944,
+    "sellerCount": 1588,
+    "newHolderCount": 438,
+    "closedPositionCount": 291,
+    "highConvictionCount": 141,
+    "netBuyers": 356,
+    "topSectors": [
+      { "name": "Information Technology", "value": 281000000000, "deltaValue": 15200000000 },
+      { "name": "Communication Services", "value": 116000000000, "deltaValue": 6100000000 },
+      { "name": "Health Care", "value": 153000000000, "deltaValue": 4700000000 }
+    ],
+    "topStocks": [
+      { "ticker": "GOOGL", "company": "Alphabet Inc", "value": 26800000000, "deltaValue": 6500000000 },
+      { "ticker": "NVDA", "company": "NVIDIA Corp", "value": 43100000000, "deltaValue": 5600000000 },
+      { "ticker": "META", "company": "Meta Platforms Inc", "value": 23300000000, "deltaValue": 3900000000 }
+    ]
+  },
+  {
+    "quarter": "2025Q3",
+    "totalInstitutionalValue": 913000000000,
+    "totalDeltaValue": 33900000000,
+    "buyerCount": 1882,
+    "sellerCount": 1624,
+    "newHolderCount": 421,
+    "closedPositionCount": 318,
+    "highConvictionCount": 134,
+    "netBuyers": 258,
+    "topSectors": [
+      { "name": "Information Technology", "value": 292000000000, "deltaValue": 10800000000 },
+      { "name": "Industrials", "value": 87000000000, "deltaValue": 5600000000 },
+      { "name": "Financials", "value": 141000000000, "deltaValue": 5100000000 }
+    ],
+    "topStocks": [
+      { "ticker": "AVGO", "company": "Broadcom Inc", "value": 17400000000, "deltaValue": 4800000000 },
+      { "ticker": "JPM", "company": "JPMorgan Chase & Co", "value": 19300000000, "deltaValue": 3600000000 },
+      { "ticker": "CAT", "company": "Caterpillar Inc", "value": 8200000000, "deltaValue": 2100000000 }
+    ]
+  },
+  {
+    "quarter": "2025Q4",
+    "totalInstitutionalValue": 967000000000,
+    "totalDeltaValue": 54100000000,
+    "buyerCount": 2140,
+    "sellerCount": 1689,
+    "newHolderCount": 512,
+    "closedPositionCount": 304,
+    "highConvictionCount": 173,
+    "netBuyers": 451,
+    "topSectors": [
+      { "name": "Information Technology", "value": 318000000000, "deltaValue": 19400000000 },
+      { "name": "Health Care", "value": 161000000000, "deltaValue": 7800000000 },
+      { "name": "Financials", "value": 151000000000, "deltaValue": 6200000000 }
+    ],
+    "topStocks": [
+      { "ticker": "NVDA", "company": "NVIDIA Corp", "value": 48900000000, "deltaValue": 9200000000 },
+      { "ticker": "AMZN", "company": "Amazon.com Inc", "value": 31100000000, "deltaValue": 6100000000 },
+      { "ticker": "LLY", "company": "Eli Lilly and Co", "value": 22400000000, "deltaValue": 4300000000 }
+    ]
+  }
+]
