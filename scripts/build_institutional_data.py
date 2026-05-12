@@ -5,7 +5,6 @@ import argparse
 import json
 import math
 import re
-import shutil
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -25,23 +24,24 @@ PROMISE_SCORE_WEIGHTS = {
     "Close_Count": -0.05,
 }
 
-FIELD_MAP = {
-    "Ticker": "ticker",
-    "Company": "company",
-    "Total_Value": "totalValue",
-    "Total_Delta_Value": "totalDeltaValue",
-    "Buyer_Count": "buyerCount",
-    "Seller_Count": "sellerCount",
-    "Holder_Count": "holderCount",
-    "New_Holder_Count": "newHolderCount",
-    "Close_Count": "closeCount",
-    "High_Conviction_Count": "highConvictionCount",
-    "Net_Buyers": "netBuyers",
-    "Buyer_Seller_Ratio": "buyerSellerRatio",
-    "Delta": "delta",
-    "Max_Portfolio_Pct": "maxPortfolioPct",
-    "Ownership_Delta_Avg": "ownershipDeltaAvg",
-    "Portfolio_Concentration_Avg": "portfolioConcentrationAvg",
+FIELD_ALIASES = {
+    "ticker": ["Ticker", "ticker"],
+    "company": ["Company", "company"],
+    "totalValue": ["Total_Value", "totalValue"],
+    "totalDeltaValue": ["Total_Delta_Value", "totalDeltaValue"],
+    "buyerCount": ["Buyer_Count", "buyerCount"],
+    "sellerCount": ["Seller_Count", "sellerCount"],
+    "holderCount": ["Holder_Count", "holderCount"],
+    "newHolderCount": ["New_Holder_Count", "newHolderCount"],
+    "closeCount": ["Close_Count", "closeCount"],
+    "highConvictionCount": ["High_Conviction_Count", "highConvictionCount"],
+    "netBuyers": ["Net_Buyers", "netBuyers"],
+    "buyerSellerRatio": ["Buyer_Seller_Ratio", "buyerSellerRatio"],
+    "delta": ["Delta", "delta"],
+    "maxPortfolioPct": ["Max_Portfolio_Pct", "maxPortfolioPct"],
+    "avgPortfolioPct": ["Avg_Portfolio_Pct", "avgPortfolioPct", "Portfolio_Concentration_Avg", "portfolioConcentrationAvg"],
+    "ownershipDeltaAvg": ["Ownership_Delta_Avg", "ownershipDeltaAvg"],
+    "portfolioConcentrationAvg": ["Portfolio_Concentration_Avg", "portfolioConcentrationAvg", "Avg_Portfolio_Pct", "avgPortfolioPct"],
 }
 
 QUARTER_PATTERN = re.compile(r"^20\d{2}Q[1-4]$")
@@ -54,13 +54,18 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def raw_value(row: dict[str, Any], aliases: list[str]) -> Any:
+    for alias in aliases:
+        if alias in row:
+            return row[alias]
+    return None
+
+
 def number(value: Any) -> float:
     if value is None:
         return 0.0
     if isinstance(value, int | float):
-        if math.isfinite(value):
-            return float(value)
-        return 0.0
+        return float(value) if math.isfinite(value) else 0.0
     if isinstance(value, str):
         cleaned = value.strip().replace(",", "").replace("$", "").replace("%", "")
         if not cleaned or cleaned.lower() in {"nan", "none", "null", "inf", "-inf"}:
@@ -84,10 +89,37 @@ def number(value: Any) -> float:
     return 0.0
 
 
-def text(value: Any) -> str:
+def metric(row: dict[str, Any], name: str) -> float:
+    return number(raw_value(row, FIELD_ALIASES[name]))
+
+
+def text_metric(row: dict[str, Any], name: str) -> str:
+    value = raw_value(row, FIELD_ALIASES[name])
     if value is None:
         return ""
     return str(value).strip()
+
+
+def normalize_row(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "ticker": text_metric(row, "ticker"),
+        "company": text_metric(row, "company"),
+        "totalValue": metric(row, "totalValue"),
+        "totalDeltaValue": metric(row, "totalDeltaValue"),
+        "maxPortfolioPct": metric(row, "maxPortfolioPct"),
+        "avgPortfolioPct": metric(row, "avgPortfolioPct"),
+        "buyerCount": int(metric(row, "buyerCount")),
+        "sellerCount": int(metric(row, "sellerCount")),
+        "closeCount": int(metric(row, "closeCount")),
+        "holderCount": int(metric(row, "holderCount")),
+        "newHolderCount": int(metric(row, "newHolderCount")),
+        "highConvictionCount": int(metric(row, "highConvictionCount")),
+        "ownershipDeltaAvg": metric(row, "ownershipDeltaAvg"),
+        "portfolioConcentrationAvg": metric(row, "portfolioConcentrationAvg"),
+        "netBuyers": int(metric(row, "netBuyers")),
+        "delta": metric(row, "delta"),
+        "buyerSellerRatio": metric(row, "buyerSellerRatio"),
+    }
 
 
 def discover_quarters(source: Path) -> list[str]:
@@ -109,48 +141,50 @@ def load_analysis(source: Path, quarter: str) -> list[dict[str, Any]]:
         data = json.load(file)
     if not isinstance(data, list):
         raise ValueError(f"Expected list in {analysis_path}")
-    return [row for row in data if isinstance(row, dict)]
+    return [normalize_row(row) for row in data if isinstance(row, dict)]
 
 
 def top_stocks(rows: list[dict[str, Any]], limit: int = 10) -> list[dict[str, Any]]:
-    sorted_rows = sorted(rows, key=lambda row: number(row.get("Total_Delta_Value")), reverse=True)
+    sorted_rows = sorted(rows, key=lambda row: row["totalDeltaValue"], reverse=True)
     return [
         {
-            "ticker": text(row.get("Ticker")),
-            "company": text(row.get("Company")),
-            "value": number(row.get("Total_Value")),
-            "deltaValue": number(row.get("Total_Delta_Value")),
+            "ticker": row["ticker"],
+            "company": row["company"],
+            "value": row["totalValue"],
+            "deltaValue": row["totalDeltaValue"],
         }
         for row in sorted_rows[:limit]
     ]
 
 
-def top_sectors(rows: list[dict[str, Any]], limit: int = 10) -> list[dict[str, Any]]:
+def top_sectors(raw_rows: list[dict[str, Any]], limit: int = 10) -> list[dict[str, Any]]:
     sector_totals: dict[str, dict[str, float]] = defaultdict(lambda: {"value": 0.0, "deltaValue": 0.0})
-    for row in rows:
-        sector = text(row.get("Sector") or row.get("GICS_Sector") or row.get("Industry") or row.get("sector"))
-        if not sector:
+    for row in raw_rows:
+        sector = raw_value(row, ["Sector", "GICS_Sector", "Industry", "sector"])
+        sector_name = "" if sector is None else str(sector).strip()
+        if not sector_name:
             continue
-        sector_totals[sector]["value"] += number(row.get("Total_Value"))
-        sector_totals[sector]["deltaValue"] += number(row.get("Total_Delta_Value"))
+        normalized = normalize_row(row)
+        sector_totals[sector_name]["value"] += normalized["totalValue"]
+        sector_totals[sector_name]["deltaValue"] += normalized["totalDeltaValue"]
     return [
         {"name": name, "value": totals["value"], "deltaValue": totals["deltaValue"]}
         for name, totals in sorted(sector_totals.items(), key=lambda item: item[1]["deltaValue"], reverse=True)[:limit]
     ]
 
 
-def build_quarterly_trend(quarter: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
+def build_quarterly_trend(quarter: str, rows: list[dict[str, Any]], raw_rows: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "quarter": quarter,
-        "totalInstitutionalValue": sum(number(row.get("Total_Value")) for row in rows),
-        "totalDeltaValue": sum(number(row.get("Total_Delta_Value")) for row in rows),
-        "buyerCount": int(sum(number(row.get("Buyer_Count")) for row in rows)),
-        "sellerCount": int(sum(number(row.get("Seller_Count")) for row in rows)),
-        "newHolderCount": int(sum(number(row.get("New_Holder_Count")) for row in rows)),
-        "closedPositionCount": int(sum(number(row.get("Close_Count")) for row in rows)),
-        "highConvictionCount": int(sum(number(row.get("High_Conviction_Count")) for row in rows)),
-        "netBuyers": int(sum(number(row.get("Net_Buyers")) for row in rows)),
-        "topSectors": top_sectors(rows),
+        "totalInstitutionalValue": sum(row["totalValue"] for row in rows),
+        "totalDeltaValue": sum(row["totalDeltaValue"] for row in rows),
+        "buyerCount": sum(row["buyerCount"] for row in rows),
+        "sellerCount": sum(row["sellerCount"] for row in rows),
+        "newHolderCount": sum(row["newHolderCount"] for row in rows),
+        "closedPositionCount": sum(row["closeCount"] for row in rows),
+        "highConvictionCount": sum(row["highConvictionCount"] for row in rows),
+        "netBuyers": sum(row["netBuyers"] for row in rows),
+        "topSectors": top_sectors(raw_rows),
         "topStocks": top_stocks(rows),
     }
 
@@ -169,21 +203,19 @@ def percentile_ranks(values: list[float]) -> list[float]:
         end = index
         while end + 1 < len(indexed) and indexed[end + 1][1] == indexed[index][1]:
             end += 1
-        average_rank = (index + end) / 2
-        percentile = average_rank / (len(values) - 1)
+        percentile = ((index + end) / 2) / (len(values) - 1)
         for offset in range(index, end + 1):
-            original_index = indexed[offset][0]
-            ranks[original_index] = percentile
+            ranks[indexed[offset][0]] = percentile
         index = end + 1
 
     return ranks
 
 
-def build_scores(rows: list[dict[str, Any]], quarter: str, limit: int = 100) -> list[dict[str, Any]]:
+def build_scores(rows: list[dict[str, Any]], raw_rows: list[dict[str, Any]], quarter: str, limit: int = 100) -> list[dict[str, Any]]:
     raw_scores = [0.0] * len(rows)
 
-    for metric, weight in PROMISE_SCORE_WEIGHTS.items():
-        values = [number(row.get(metric)) for row in rows]
+    for metric_name, weight in PROMISE_SCORE_WEIGHTS.items():
+        values = [number(raw_value(raw_row, [metric_name])) for raw_row in raw_rows]
         ranks = percentile_ranks(values)
         for index, rank in enumerate(ranks):
             raw_scores[index] += rank * weight
@@ -195,16 +227,7 @@ def build_scores(rows: list[dict[str, Any]], quarter: str, limit: int = 100) -> 
     scored_rows: list[dict[str, Any]] = []
     for row, raw_score in zip(rows, raw_scores, strict=True):
         promise_score = 100.0 if spread == 0 and raw_scores else ((raw_score - min_score) / spread) * 100.0
-        normalized = {target: number(row.get(source)) for source, target in FIELD_MAP.items() if target not in {"ticker", "company"}}
-        scored_rows.append(
-            {
-                "ticker": text(row.get("Ticker")),
-                "company": text(row.get("Company")),
-                "quarter": quarter,
-                "promiseScore": round(promise_score, 2),
-                **normalized,
-            }
-        )
+        scored_rows.append({"quarter": quarter, "promiseScore": round(promise_score, 2), **row})
 
     scored_rows.sort(key=lambda row: row["promiseScore"], reverse=True)
     ranked = scored_rows[:limit]
@@ -220,18 +243,12 @@ def write_json(path: Path, data: Any) -> None:
         file.write("\n")
 
 
-def copy_analysis_files(source: Path, output: Path, quarters: list[str]) -> None:
-    for quarter in quarters:
-        destination = output / "quarters" / quarter / "analysis.json"
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source / quarter / "analysis.json", destination)
-
-
 def main() -> None:
     args = parse_args()
     source = args.source
     output = args.output
     quarters = discover_quarters(source)
+    raw_analyses = {quarter: json.loads((source / quarter / "analysis.json").read_text(encoding="utf-8")) for quarter in quarters}
     analyses = {quarter: load_analysis(source, quarter) for quarter in quarters}
     latest_quarter = quarters[-1]
 
@@ -242,13 +259,14 @@ def main() -> None:
         "source": "13Ftracker",
         "schemaVersion": 1,
     }
-    quarterly_trends = [build_quarterly_trend(quarter, analyses[quarter]) for quarter in quarters]
-    most_promising = build_scores(analyses[latest_quarter], latest_quarter)
+    quarterly_trends = [build_quarterly_trend(quarter, analyses[quarter], raw_analyses[quarter]) for quarter in quarters]
+    most_promising = build_scores(analyses[latest_quarter], raw_analyses[latest_quarter], latest_quarter)
 
     write_json(output / "metadata.json", metadata)
     write_json(output / "quarterly-trends.json", quarterly_trends)
     write_json(output / "most-promising-stocks.json", most_promising)
-    copy_analysis_files(source, output, quarters)
+    for quarter in quarters:
+        write_json(output / "quarters" / quarter / "analysis.json", analyses[quarter])
 
     print(f"Wrote institutional artifacts for {len(quarters)} quarters to {output}")
 
