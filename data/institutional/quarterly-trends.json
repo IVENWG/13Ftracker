@@ -368,5 +368,79 @@
         "deltaValue": 1217100220.0
       }
     ]
+  },
+  {
+    "quarter": "2026Q2",
+    "totalInstitutionalValue": 72264725520.0,
+    "totalDeltaValue": 16803333684.19,
+    "buyerCount": 199,
+    "sellerCount": 175,
+    "newHolderCount": 50,
+    "closedPositionCount": 15,
+    "highConvictionCount": 12,
+    "netBuyers": 24,
+    "topSectors": [],
+    "topStocks": [
+      {
+        "ticker": "CBRS",
+        "company": "Cerebras Systems Inc",
+        "value": 7130000000.0,
+        "deltaValue": 7130000000.0
+      },
+      {
+        "ticker": "MRVL",
+        "company": "Marvell Technology Inc",
+        "value": 17210000000.0,
+        "deltaValue": 4210000000.0
+      },
+      {
+        "ticker": "IESC",
+        "company": "IES Holdings Inc",
+        "value": 7840000000.0,
+        "deltaValue": 2910000000.0
+      },
+      {
+        "ticker": "MPWR",
+        "company": "Monolithic Power Systems Inc",
+        "value": 7010000000.0,
+        "deltaValue": 2200000000.0
+      },
+      {
+        "ticker": "RBLX",
+        "company": "Roblox Corp",
+        "value": 4380000000.0,
+        "deltaValue": 1740000000.0
+      },
+      {
+        "ticker": "SBSW",
+        "company": "Sibanye Stillwater Ltd",
+        "value": 1820517890.0,
+        "deltaValue": 1573771510.0
+      },
+      {
+        "ticker": "RMBS",
+        "company": "Rambus Inc",
+        "value": 1670000000.0,
+        "deltaValue": 1384510000.0
+      },
+      {
+        "ticker": "BIIB",
+        "company": "Biogen Inc",
+        "value": 3280000000.0,
+        "deltaValue": 930000000.0
+      },
+      {
+        "ticker": "SOBO",
+        "company": "South Bow Corp",
+        "value": 773680000.0,
+        "deltaValue": 450710570.0
+      },
+      {
+        "ticker": "RELY",
+        "company": "Remitly Global Inc",
+        "value": 493140000.0,
+        "deltaValue": 324910000.0
+      }
+    ]
   }
 ]
