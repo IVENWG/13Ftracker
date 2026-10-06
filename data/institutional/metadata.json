@@ -1,13 +1,14 @@
 {
-  "generatedAt": "2026-09-29T13:05:30.603240Z",
-  "latestQuarter": "2026Q2",
+  "generatedAt": "2026-10-06T13:33:34.971458Z",
+  "latestQuarter": "2026Q3",
   "quarters": [
     "2025Q1",
     "2025Q2",
     "2025Q3",
     "2025Q4",
     "2026Q1",
-    "2026Q2"
+    "2026Q2",
+    "2026Q3"
   ],
   "source": "13Ftracker",
   "schemaVersion": 1

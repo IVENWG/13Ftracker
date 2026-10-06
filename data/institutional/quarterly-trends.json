@@ -442,5 +442,79 @@
         "deltaValue": 324910000.0
       }
     ]
+  },
+  {
+    "quarter": "2026Q3",
+    "totalInstitutionalValue": 16289493290.0,
+    "totalDeltaValue": 8150088200.0,
+    "buyerCount": 22,
+    "sellerCount": 104,
+    "newHolderCount": 3,
+    "closedPositionCount": 93,
+    "highConvictionCount": 2,
+    "netBuyers": -82,
+    "topSectors": [],
+    "topStocks": [
+      {
+        "ticker": "VEON",
+        "company": "VEON Ltd",
+        "value": 6810000000.0,
+        "deltaValue": 6535110000.0
+      },
+      {
+        "ticker": "TWST",
+        "company": "Twist Bioscience Corporation",
+        "value": 1210000000.0,
+        "deltaValue": 726150000.0
+      },
+      {
+        "ticker": "VTRS",
+        "company": "Viatris Inc",
+        "value": 2069999999.9999998,
+        "deltaValue": 539999999.9999998
+      },
+      {
+        "ticker": "CRL",
+        "company": "Charles River Laboratories International Inc",
+        "value": 1400000000.0,
+        "deltaValue": 438470000.0
+      },
+      {
+        "ticker": "HYMB",
+        "company": "SPDR Nuveen ICE High Yield Municipal Bond ETF",
+        "value": 413400000.0,
+        "deltaValue": 243820000.0
+      },
+      {
+        "ticker": "ADIG",
+        "company": "ADI Global Distribution Inc",
+        "value": 176090000.0,
+        "deltaValue": 176090000.0
+      },
+      {
+        "ticker": "GPK",
+        "company": "Graphic Packaging Holding Company",
+        "value": 357710000.0,
+        "deltaValue": 174150000.0
+      },
+      {
+        "ticker": "AAUC",
+        "company": "Allied Gold Corporation",
+        "value": 405800000.0,
+        "deltaValue": 130820000.0
+      },
+      {
+        "ticker": "SVM",
+        "company": "Silvercorp Metals Inc",
+        "value": 283630000.0,
+        "deltaValue": 107510000.0
+      },
+      {
+        "ticker": "VRDN",
+        "company": "Viridian Therapeutics Inc",
+        "value": 138380000.0,
+        "deltaValue": 95340000.0
+      }
+    ]
   }
 ]
